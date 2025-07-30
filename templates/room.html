@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Jam Session Room | {{ room_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+    <!-- Room Info Bar -->
+    <header class="bg-gray-800 border-b border-gray-700 py-4 px-6">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-indigo-400">Live Music Jam</h1>
+                <div class="bg-indigo-900 px-3 py-1 rounded-full text-sm">
+                    Room ID: <span id="roomIdDisplay" class="font-mono">{{ room_id }}</span>
+                    <button id="copyRoomId" class="ml-2 text-indigo-300 hover:text-indigo-100 transition">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-300">{{ username }}</span>
+                <span id="hostBadge" class="{{ 'hidden' if not is_host else '' }} bg-purple-600 text-xs px-2 py-1 rounded-full">Host</span>
+                <button id="leaveRoomBtn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+                    Leave Room
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col md:flex-row overflow-hidden">
+        <!-- Left Panel - Playlist -->
+        <div class="w-full md:w-1/3 lg:w-1/4 bg-gray-800 p-4 overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">Playlist</h2>
+                <button id="uploadBtn" class="bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-lg text-sm transition">
+                    <i class="fas fa-plus mr-1"></i> Add Track
+                </button>
+            </div>
+            
+            <div id="playlistContainer" class="space-y-2">
+                <!-- Playlist items will be added here dynamically -->
+                <div class="text-gray-400 text-center py-8">
+                    <i class="fas fa-music text-4xl mb-2 opacity-30"></i>
+                    <p>No tracks added yet</p>
+                    <p class="text-sm">Upload a track to get started</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Player -->
+        <div class="flex-grow bg-gray-900 flex flex-col">
+            <!-- Participants -->
+            <div class="bg-gray-800 p-4 border-b border-gray-700">
+                <h3 class="text-lg font-medium mb-2">Participants</h3>
+                <div id="participantsContainer" class="flex flex-wrap gap-2">
+                    <!-- Participants will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Player UI -->
+            <div class="flex-grow flex flex-col items-center justify-center p-6">
+                <div class="w-full max-w-2xl bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+                    <!-- Album Art / Visualizer -->
+                    <div class="bg-gradient-to-br from-indigo-900 to-purple-900 flex items-center justify-center">
+                        <div id="trackVisualizer" class="w-full h-64 flex items-center justify-center">
+                            <i class="fas fa-music text-8xl text-indigo-300 opacity-30"></i>
+                        </div>
+                    </div>
+
+                    <!-- Track Info -->
+                    <div class="p-6">
+                        <div class="text-center mb-6">
+                            <h2 id="currentTrackName" class="text-2xl font-bold mb-1 truncate">No track playing</h2>
+                            <p id="currentTrackAddedBy" class="text-gray-400">-</p>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="mb-4">
+                            <div class="flex justify-between text-sm text-gray-400 mb-1">
+                                <span id="currentTime">0:00</span>
+                                <span id="totalTime">0:00</span>
+                            </div>
+                            <div id="progressBarContainer" class="h-2 bg-gray-700 rounded-full overflow-hidden cursor-pointer">
+                                <div id="progressBar" class="h-full bg-indigo-600 w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+
+                        <!-- Controls -->
+                        <div class="flex justify-center items-center space-x-6">
+                            <button id="prevBtn" class="text-2xl text-gray-400 hover:text-white transition disabled:opacity-50" disabled>
+                                <i class="fas fa-step-backward"></i>
+                            </button>
+                            <button id="playPauseBtn" class="text-4xl text-white hover:text-indigo-300 transition disabled:opacity-50" disabled>
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button id="nextBtn" class="text-2xl text-gray-400 hover:text-white transition disabled:opacity-50" disabled>
+                                <i class="fas fa-step-forward"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Upload Track</h3>
+                <button id="closeUploadModal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="uploadForm" class="space-y-4">
+                <div class="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                    <input type="file" id="fileInput" class="hidden" accept=".mp3,.wav,.ogg">
+                    <label for="fileInput" class="cursor-pointer block">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-indigo-400 mb-2"></i>
+                        <p class="mb-1">Drag and drop or click to upload</p>
+                        <p class="text-sm text-gray-400">MP3, WAV, OGG (max 10MB)</p>
+                    </label>
+                    <div id="filePreview" class="mt-4 hidden">
+                        <div class="bg-gray-700 p-2 rounded flex items-center">
+                            <i class="fas fa-music text-indigo-400 mr-2"></i>
+                            <span id="fileName" class="truncate flex-grow"></span>
+                            <button id="removeFile" class="text-gray-400 hover:text-white">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="button" id="cancelUpload" class="px-4 py-2 text-gray-300 hover:text-white mr-2">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submitUpload" class="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition disabled:opacity-50" disabled>
+                        Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Audio Element (Hidden) -->
+    <audio id="audioPlayer" class="hidden" preload="auto" crossorigin="anonymous"></audio>
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // Pass server-side variables to JavaScript
+        const roomId = "{{ room_id | safe }}";
+        const username = "{{ username | safe }}";
+        const isHost = {{ is_host | tojson }};
+
+        // Prevent caching of audio files and handle audio player events
+        window.addEventListener('load', function() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer) {
+                audioPlayer.addEventListener('error', function(e) {
+                    console.error('Audio error event:', e);
+                });
+                audioPlayer.addEventListener('ended', function() {
+                    console.log('Track ended');
+                });
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/room.js') }}?v={{ range(1, 10000) | random }}"></script>
+</body>
+</html>

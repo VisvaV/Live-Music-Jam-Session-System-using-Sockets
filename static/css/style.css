@@ -1,0 +1,157 @@
+/* Custom styles for Live Music Jam Session */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(79, 70, 229, 0.6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.8);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.8);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Custom classes */
+.track-item {
+    transition: all 0.3s ease;
+}
+
+.track-item:hover {
+    transform: translateX(5px);
+}
+
+.track-item.active {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.2) 0%, rgba(31, 41, 55, 0) 100%);
+    border-left: 3px solid #6366f1;
+}
+
+.participant-badge {
+    transition: all 0.3s ease;
+}
+
+.participant-badge:hover {
+    transform: scale(1.05);
+}
+
+.host-badge {
+    animation: pulse-glow 2s infinite;
+}
+
+/* Audio visualizer */
+.visualizer-bar {
+    background: linear-gradient(to top, #4f46e5, #a78bfa);
+    border-radius: 2px;
+    margin: 0 1px;
+    transition: height 0.1s ease;
+}
+
+/* Toast notifications */
+.toast {
+    animation: toast-in-right 0.5s ease, toast-out-right 0.5s ease 4.5s forwards;
+}
+
+@keyframes toast-in-right {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toast-out-right {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .track-item {
+        padding: 0.5rem;
+    }
+    
+    #trackVisualizer {
+        height: 120px;
+    }
+}
+
+/* Aspect ratio utility for player */
+.aspect-w-1,
+.aspect-h-1 {
+    position: relative;
+}
+
+.aspect-w-1 {
+    padding-bottom: 100%;
+}
+
+.aspect-w-1 > * {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+/* File upload drag and drop styles */
+.drag-over {
+    background-color: rgba(79, 70, 229, 0.1);
+    border-color: #6366f1 !important;
+}
+
+/* Progress bar animation */
+@keyframes progress-animation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.progress-animated {
+    background: linear-gradient(90deg, #4f46e5, #a78bfa, #4f46e5);
+    background-size: 200% 200%;
+    animation: progress-animation 2s linear infinite;
+}
