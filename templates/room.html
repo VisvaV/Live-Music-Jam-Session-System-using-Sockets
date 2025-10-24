@@ -57,6 +57,102 @@
 
         <!-- Right Panel - Player -->
         <div class="flex-grow bg-gray-900 flex flex-col">
+            <!-- Network Quality Monitor -->
+            <div class="bg-gray-800 p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-medium">Network Quality</h3>
+                    <div id="networkIndicator" class="network-indicator excellent"></div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="text-center">
+                        <div class="text-gray-400">Quality</div>
+                        <div id="networkQuality" class="font-bold text-green-400">EXCELLENT</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Latency</div>
+                        <div id="networkLatency" class="font-bold">0ms</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Bandwidth</div>
+                        <div id="networkBandwidth" class="font-bold">0 kbps</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Jitter</div>
+                        <div id="networkJitter" class="font-bold">0ms</div>
+                    </div>
+                </div>
+                <div id="networkWarning" class="hidden mt-2 p-2 bg-yellow-900 border border-yellow-600 rounded">
+                    <!-- Network warning will be shown here -->
+                </div>
+            </div>
+
+            <!-- Adaptive Streaming Quality -->
+            <div class="bg-gray-800 p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-medium">Streaming Quality</h3>
+                    <div id="qualityIndicator" class="quality-indicator medium"></div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="streamingQuality" class="streaming-quality medium font-medium">Medium Quality (192 kbps)</div>
+                        <div class="text-sm text-gray-400">Auto-adjusting based on network conditions</div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="window.adaptiveStreaming.selectQuality('low')" 
+                                class="quality-btn low px-3 py-1 rounded text-sm">Low</button>
+                        <button onclick="window.adaptiveStreaming.selectQuality('medium')" 
+                                class="quality-btn medium px-3 py-1 rounded text-sm">Medium</button>
+                        <button onclick="window.adaptiveStreaming.selectQuality('high')" 
+                                class="quality-btn high px-3 py-1 rounded text-sm">High</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NTP Synchronization Status -->
+            <div class="bg-gray-800 p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-medium">Synchronization</h3>
+                    <div id="jitterIndicator" class="jitter-indicator low"></div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="text-center">
+                        <div class="text-gray-400">Status</div>
+                        <div id="syncStatus" class="font-bold text-green-400">Synchronized</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Time Offset</div>
+                        <div id="timeOffset" class="font-bold">0ms</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Jitter</div>
+                        <div id="jitterValue" class="font-bold">0ms</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-gray-400">Buffer Size</div>
+                        <div id="bufferSize" class="font-bold">100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audio Encryption Status -->
+            <div class="bg-gray-800 p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-lg font-medium">Audio Security</h3>
+                    <div id="encryptionIndicator" class="encryption-indicator enabled"></div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div id="encryptionStatus" class="encryption-status enabled font-medium">Encryption Enabled</div>
+                        <div class="text-sm text-gray-400">AES-256 encryption for audio streams</div>
+                    </div>
+                    <button onclick="window.audioEncryption.toggleEncryption()" 
+                            class="encryption-toggle px-4 py-2 rounded-lg text-sm transition">
+                        <i class="fas fa-lock mr-1"></i>
+                        Toggle
+                    </button>
+                </div>
+            </div>
+
             <!-- Participants -->
             <div class="bg-gray-800 p-4 border-b border-gray-700">
                 <h3 class="text-lg font-medium mb-2">Participants</h3>
@@ -179,6 +275,12 @@
             }
         });
     </script>
+    <script src="{{ url_for('static', filename='js/network-monitor.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/adaptive-streaming.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/ntp-synchronization.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/audio-encryption.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/voting-system.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/chat-system.js') }}?v={{ range(1, 10000) | random }}"></script>
     <script src="{{ url_for('static', filename='js/room.js') }}?v={{ range(1, 10000) | random }}"></script>
 </body>
 </html>
