@@ -729,14 +729,30 @@ document.addEventListener('DOMContentLoaded', function() {
                         ${isActive ? '<i class="fas fa-volume-up"></i>' : `<span>${index + 1}</span>`}
                     </div>
                     <div class="flex-grow">
-                        <div class="font-medium ${isActive ? 'text-indigo-300' : 'text-white'} truncate">${track.name}</div>
+                        <div class="track-name font-medium ${isActive ? 'text-indigo-300' : 'text-white'} truncate">${track.name}</div>
                         <div class="text-sm text-gray-400">Added by ${track.added_by}</div>
                     </div>
-                    ${isHost || track.added_by === username ? `
-                        <button class="remove-track-btn text-gray-400 hover:text-red-500 transition">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    ` : ''}
+                    <div class="flex items-center space-x-2">
+                        <!-- Voting buttons -->
+                        <div class="flex items-center space-x-1">
+                            <button class="upvote-btn text-gray-400 hover:text-green-500 transition" 
+                                    onclick="window.votingSystem.vote('${track.id}', 'upvote', '${username}')">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span class="count text-xs ml-1">0</span>
+                            </button>
+                            <div class="vote-score text-sm font-medium mx-2">0</div>
+                            <button class="downvote-btn text-gray-400 hover:text-red-500 transition"
+                                    onclick="window.votingSystem.vote('${track.id}', 'downvote', '${username}')">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span class="count text-xs ml-1">0</span>
+                            </button>
+                        </div>
+                        ${isHost || track.added_by === username ? `
+                            <button class="remove-track-btn text-gray-400 hover:text-red-500 transition ml-2">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             `;
             
