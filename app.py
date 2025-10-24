@@ -111,6 +111,27 @@ def room(room_id):
                            username=session['username'],
                            is_host=session['username'] == rooms[room_id]['host'])
 
+@app.route('/api/network-test', methods=['POST'])
+def network_test():
+    """Endpoint for network quality testing"""
+    try:
+        data = request.get_json()
+        if data and 'test' in data:
+            # Return server timestamp for latency calculation
+            return jsonify({
+                'server_time': time.time(),
+                'timestamp': data.get('timestamp', time.time())
+            })
+        else:
+            # For bandwidth testing, just return the data size
+            content_length = request.content_length
+            return jsonify({
+                'received_bytes': content_length,
+                'server_time': time.time()
+            })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -156,6 +177,28 @@ def upload_file():
     return jsonify({'error': 'File type not allowed'}), 400
 
 # Socket.IO event handlers
+@socketio.on('ntp_sync_request')
+def handle_ntp_sync_request(data):
+    """Handle NTP synchronization request"""
+    t1 = data.get('t1')
+    client_time = data.get('client_time')
+    
+    # Server receive time
+    t2 = time.time()
+    server_receive_time = time.time()
+    
+    # Server send time (slight delay to simulate processing)
+    time.sleep(0.001)  # 1ms processing time
+    t3 = time.time()
+    server_send_time = time.time()
+    
+    emit('ntp_sync_response', {
+        't2': t2,
+        't3': t3,
+        'server_receive_time': server_receive_time,
+        'server_send_time': server_send_time
+    })
+
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
@@ -291,6 +334,157 @@ def on_skip(data):
             'position': 0,
             'server_time': time.time()
         }, room=room_id)
+
+@socketio.on('vote_track')
+def on_vote_track(data):
+    """Handle track voting"""
+    room_id = data.get('room_id')
+    track_id = data.get('track_id')
+    vote_type = data.get('vote_type')
+    username = data.get('username')
+    
+    if not room_id or room_id not in rooms:
+        return
+    
+    if not track_id or not vote_type or not username:
+        return
+    
+    # Initialize voting data for room if not exists
+    if 'votes' not in rooms[room_id]:
+        rooms[room_id]['votes'] = {}
+    
+    if track_id not in rooms[room_id]['votes']:
+        rooms[room_id]['votes'][track_id] = {
+            'upvotes': 0,
+            'downvotes': 0,
+            'user_votes': {}
+        }
+    
+    track_votes = rooms[room_id]['votes'][track_id]
+    
+    # Check if user already voted
+    existing_vote = track_votes['user_votes'].get(username)
+    
+    if existing_vote == vote_type:
+        # Remove vote (toggle)
+        if vote_type == 'upvote':
+            track_votes['upvotes'] -= 1
+        else:
+            track_votes['downvotes'] -= 1
+        del track_votes['user_votes'][username]
+        action = 'remove'
+    else:
+        # Remove previous vote if exists
+        if existing_vote:
+            if existing_vote == 'upvote':
+                track_votes['upvotes'] -= 1
+            else:
+                track_votes['downvotes'] -= 1
+        
+        # Add new vote
+        if vote_type == 'upvote':
+            track_votes['upvotes'] += 1
+        else:
+            track_votes['downvotes'] += 1
+        
+        track_votes['user_votes'][username] = vote_type
+        action = 'add'
+    
+    # Emit vote update to all clients in room
+    emit('track_voted', {
+        'track_id': track_id,
+        'vote_type': vote_type,
+        'username': username,
+        'action': action,
+        'upvotes': track_votes['upvotes'],
+        'downvotes': track_votes['downvotes']
+    }, room=room_id)
+
+@socketio.on('chat_message')
+def on_chat_message(data):
+    """Handle chat messages"""
+    room_id = data.get('room_id')
+    message = data.get('message')
+    username = data.get('username')
+    timestamp = data.get('timestamp')
+    
+    if not room_id or room_id not in rooms:
+        return
+    
+    if not message or not username:
+        return
+    
+    # Emit message to all clients in room
+    emit('chat_message', {
+        'message': message,
+        'username': username,
+        'timestamp': timestamp,
+        'reactions': {}
+    }, room=room_id)
+
+@socketio.on('user_typing')
+def on_user_typing(data):
+    """Handle typing indicator"""
+    room_id = data.get('room_id')
+    username = data.get('username')
+    
+    if room_id and room_id in rooms:
+        emit('user_typing', {
+            'username': username
+        }, room=room_id)
+
+@socketio.on('user_stopped_typing')
+def on_user_stopped_typing(data):
+    """Handle stopped typing indicator"""
+    room_id = data.get('room_id')
+    username = data.get('username')
+    
+    if room_id and room_id in rooms:
+        emit('user_stopped_typing', {
+            'username': username
+        }, room=room_id)
+
+@socketio.on('chat_reaction')
+def on_chat_reaction(data):
+    """Handle chat reactions"""
+    room_id = data.get('room_id')
+    message_id = data.get('message_id')
+    emoji = data.get('emoji')
+    username = data.get('username')
+    
+    if not room_id or room_id not in rooms:
+        return
+    
+    # Initialize chat reactions for room if not exists
+    if 'chat_reactions' not in rooms[room_id]:
+        rooms[room_id]['chat_reactions'] = {}
+    
+    if message_id not in rooms[room_id]['chat_reactions']:
+        rooms[room_id]['chat_reactions'][message_id] = {}
+    
+    if emoji not in rooms[room_id]['chat_reactions'][message_id]:
+        rooms[room_id]['chat_reactions'][message_id][emoji] = []
+    
+    # Toggle reaction
+    reactions = rooms[room_id]['chat_reactions'][message_id][emoji]
+    if username in reactions:
+        reactions.remove(username)
+        action = 'remove'
+    else:
+        reactions.append(username)
+        action = 'add'
+    
+    # Remove empty reactions
+    if not reactions:
+        del rooms[room_id]['chat_reactions'][message_id][emoji]
+    
+    # Emit reaction update
+    emit('chat_reaction', {
+        'message_id': message_id,
+        'emoji': emoji,
+        'username': username,
+        'action': action
+    }, room=room_id)
 
 @socketio.on('remove_track')
 def on_remove_track(data):
